@@ -9,6 +9,7 @@ import Dashboard from "../pages/DashBoard";
 import SignUpPage from "../pages/SignUpPage";
 import Login from "../components/Login/Login";
 import BusPass from "../pages/BusPass";
+import UserDashboardPage from "../pages/UserDashboardPage";
 
 const Router = () => {
   return (
@@ -22,6 +23,7 @@ const Router = () => {
       <Route path="/route" element={<RoutePage/>} />
       <Route path="/schedule" element={<SchedulePage/>} />
       <Route path="/buspass" element={<BusPass/>} />
+      <Route path="/user/home" element={<UserDashboardPage/>} />
     </Routes>
   );
 };
