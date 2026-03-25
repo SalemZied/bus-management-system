@@ -48,6 +48,7 @@ function Login() {
           <input type="password" onChange={(e)=>setpassword(e.target.value)} placeholder="Password" />
         </div>
         <input onClick={authenticate} className="signup-btn" type="submit" value="LOGIN" />
+        <Link to="/user/home" className="signup-btn" style={{display:"block",textAlign:"center",textDecoration:"none",marginTop:"8px"}}>PASSENGER DASHBOARD</Link>
       </form>
     </div>
   </div>
