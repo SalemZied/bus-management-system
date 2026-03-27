@@ -28,6 +28,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .card {
@@ -38,28 +39,28 @@
 }
 
 .card--map {
-  grid-column: span 2;
+  grid-column: 1 / -1;
 }
 
 .map-area {
   position: relative;
-  height: 280px;
+  height: 360px;
   border-radius: 10px;
   border: 1px solid #dce3f0;
-  background: linear-gradient(180deg, #dff0ff 0%, #eff5fb 100%);
   overflow: hidden;
+  margin-top: 8px;
 }
 
-.bus-marker {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  background: #1f6feb;
-  color: #fff;
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-tooltip {
   font-size: 0.75rem;
-  font-weight: 600;
-  padding: 6px 8px;
+  font-weight: 700;
   border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
 }
 
 .kpi {
@@ -69,10 +70,24 @@
   font-weight: 700;
 }
 
+.card ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.card li {
+  margin-bottom: 8px;
+}
+
 .notification {
   border-left: 4px solid #ccc;
   padding-left: 10px;
   margin-bottom: 10px;
+  list-style: none;
+}
+
+.notification p {
+  margin: 6px 0;
 }
 
 .notification--warning {
@@ -90,5 +105,9 @@
 @media (max-width: 900px) {
   .card--map {
     grid-column: span 1;
+  }
+
+  .map-area {
+    height: 300px;
   }
 }
