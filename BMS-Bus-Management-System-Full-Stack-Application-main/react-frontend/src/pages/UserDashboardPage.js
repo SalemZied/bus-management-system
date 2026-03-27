@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import "../styles/user-dashboard.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 const fallbackData = {
   lastUpdated: new Date().toISOString(),
-  mapProviderUrl: process.env.REACT_APP_MAPS_PROVIDER_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  mapProviderUrl:
+    process.env.REACT_APP_MAPS_PROVIDER_URL ||
+    "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
   mapApiKey: process.env.REACT_APP_MAPS_API_KEY || "",
   buses: [
     {
@@ -47,19 +51,19 @@ const fallbackData = {
   ],
 };
 
-const getMarkerPosition = (latitude, longitude) => {
-  const latMin = 40.69;
-  const latMax = 40.74;
-  const lonMin = -74.03;
-  const lonMax = -73.97;
+const FitMapToBuses = ({ buses }) => {
+  const map = useMap();
 
-  const top = ((latMax - latitude) / (latMax - latMin)) * 100;
-  const left = ((longitude - lonMin) / (lonMax - lonMin)) * 100;
+  useEffect(() => {
+    if (!buses.length) {
+      return;
+    }
 
-  return {
-    top: `${Math.min(95, Math.max(5, top))}%`,
-    left: `${Math.min(95, Math.max(5, left))}%`,
-  };
+    const latLngs = buses.map((bus) => [bus.latitude, bus.longitude]);
+    map.fitBounds(latLngs, { padding: [36, 36], maxZoom: 14 });
+  }, [buses, map]);
+
+  return null;
 };
 
 const UserDashboardPage = () => {
@@ -87,14 +91,26 @@ const UserDashboardPage = () => {
     return () => clearInterval(refreshInterval);
   }, []);
 
+  const buses = dashboardData.buses || [];
+
   const nextArrival = useMemo(() => {
-    if (!dashboardData.buses || dashboardData.buses.length === 0) {
+    if (buses.length === 0) {
       return "No active bus";
     }
 
-    const nextBus = [...dashboardData.buses].sort((a, b) => a.etaMinutes - b.etaMinutes)[0];
+    const nextBus = [...buses].sort((a, b) => a.etaMinutes - b.etaMinutes)[0];
     return `${nextBus.busNumber} • ${nextBus.etaMinutes} min`;
-  }, [dashboardData.buses]);
+  }, [buses]);
+
+  const mapCenter = useMemo(() => {
+    if (buses.length === 0) {
+      return [40.7228, -74.0045];
+    }
+
+    const totalLat = buses.reduce((sum, bus) => sum + bus.latitude, 0);
+    const totalLon = buses.reduce((sum, bus) => sum + bus.longitude, 0);
+    return [totalLat / buses.length, totalLon / buses.length];
+  }, [buses]);
 
   return (
     <div className="user-dashboard">
@@ -109,33 +125,49 @@ const UserDashboardPage = () => {
 
       <section className="user-dashboard__grid">
         <article className="card card--map">
-          <h2>Live bus map</h2>
+          <h2>Live bus map (Leaflet)</h2>
           <div className="map-area">
-            {dashboardData.buses.map((bus) => {
-              const markerPosition = getMarkerPosition(bus.latitude, bus.longitude);
-              return (
-                <div
+            <MapContainer center={mapCenter} zoom={12} scrollWheelZoom className="leaflet-map">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
+                url={dashboardData.mapProviderUrl}
+              />
+              <FitMapToBuses buses={buses} />
+              {buses.map((bus) => (
+                <CircleMarker
                   key={bus.busNumber}
-                  className="bus-marker"
-                  style={markerPosition}
-                  title={`${bus.busNumber} - ${bus.routeName}`}
+                  center={[bus.latitude, bus.longitude]}
+                  radius={10}
+                  pathOptions={{
+                    color: bus.status === "Delayed" ? "#d97706" : "#1f6feb",
+                    fillColor: bus.status === "Delayed" ? "#f59e0b" : "#2563eb",
+                    fillOpacity: 0.9,
+                    weight: 2,
+                  }}
                 >
-                  <span>{bus.busNumber}</span>
-                </div>
-              );
-            })}
+                  <Tooltip direction="top" offset={[0, -8]} opacity={1}>
+                    {bus.busNumber}
+                  </Tooltip>
+                  <Popup>
+                    <strong>{bus.busNumber}</strong>
+                    <br />
+                    {bus.routeName} → {bus.destination}
+                    <br />
+                    Next stop: {bus.nextStop}
+                    <br />
+                    ETA: {bus.etaMinutes} min
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </MapContainer>
           </div>
-          <small>
-            Map provider: {dashboardData.mapProviderUrl}
-            {dashboardData.mapApiKey ? " (secured with API key from env)" : ""}
-          </small>
         </article>
 
         <article className="card">
           <h2>ETA</h2>
           <p className="kpi">{nextArrival}</p>
           <ul>
-            {dashboardData.buses.map((bus) => (
+            {buses.map((bus) => (
               <li key={bus.busNumber}>
                 {bus.busNumber} → {bus.nextStop} in <strong>{bus.etaMinutes} min</strong>
               </li>
