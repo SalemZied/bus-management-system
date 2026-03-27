@@ -108,6 +108,18 @@
   pointer-events: none;
 }
 
+
+.map-load-error {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  background: rgba(220, 53, 69, 0.9);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  z-index: 500;
+}
 .map-provider {
   margin-top: 10px;
   display: block;

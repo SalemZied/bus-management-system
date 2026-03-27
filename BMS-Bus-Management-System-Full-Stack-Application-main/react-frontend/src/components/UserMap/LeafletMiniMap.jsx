@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const LEAFLET_CSS_ID = "leaflet-css-cdn";
 const LEAFLET_JS_ID = "leaflet-js-cdn";
@@ -25,6 +25,10 @@ const loadLeafletScript = () => {
 
   const existingScript = document.getElementById(LEAFLET_JS_ID);
   if (existingScript) {
+    if (existingScript.dataset.loaded === "true") {
+      return Promise.resolve(window.L);
+    }
+
     return new Promise((resolve) => {
       existingScript.addEventListener("load", () => resolve(window.L), { once: true });
     });
@@ -37,7 +41,10 @@ const loadLeafletScript = () => {
     script.integrity = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
     script.crossOrigin = "";
     script.async = true;
-    script.onload = () => resolve(window.L);
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve(window.L);
+    };
     script.onerror = () => reject(new Error("Leaflet failed to load"));
 
     document.body.appendChild(script);
@@ -47,37 +54,51 @@ const loadLeafletScript = () => {
 const LeafletMiniMap = ({ buses, mapProviderUrl, mapApiKey }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
+  const [loadError, setLoadError] = useState(false);
+
+  const validBuses = useMemo(
+    () =>
+      buses.filter(
+        (bus) => Number.isFinite(bus.latitude) && Number.isFinite(bus.longitude) && Boolean(bus.busNumber)
+      ),
+    [buses]
+  );
 
   useEffect(() => {
     let isMounted = true;
 
     const initMap = async () => {
-      addLeafletCss();
-      const leaflet = await loadLeafletScript();
+      try {
+        addLeafletCss();
+        const leaflet = await loadLeafletScript();
 
-      if (!isMounted || !containerRef.current || mapRef.current) {
-        return;
+        if (!isMounted || !containerRef.current || mapRef.current || !leaflet) {
+          return;
+        }
+
+        const map = leaflet.map(containerRef.current, {
+          zoomControl: true,
+          attributionControl: true,
+        }).setView([40.7194, -74.006], 12);
+
+        const tileUrl = mapApiKey
+          ? `${mapProviderUrl}${mapProviderUrl.includes("?") ? "&" : "?"}key=${mapApiKey}`
+          : mapProviderUrl;
+
+        leaflet
+          .tileLayer(tileUrl, {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          })
+          .addTo(map);
+
+        mapRef.current = map;
+        setLoadError(false);
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(true);
+        }
       }
-
-      const center = [40.7194, -74.0060];
-
-      const map = leaflet.map(containerRef.current, {
-        zoomControl: true,
-        attributionControl: true,
-      }).setView(center, 12);
-
-      const tileUrl = mapApiKey
-        ? `${mapProviderUrl}?key=${mapApiKey}`
-        : mapProviderUrl;
-
-      leaflet
-        .tileLayer(tileUrl, {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        })
-        .addTo(map);
-
-      mapRef.current = map;
     };
 
     initMap();
@@ -104,7 +125,7 @@ const LeafletMiniMap = ({ buses, mapProviderUrl, mapApiKey }) => {
       }
     });
 
-    const markers = buses.map((bus) => {
+    const markers = validBuses.map((bus) => {
       const marker = window.L.marker([bus.latitude, bus.longitude]).addTo(map);
       marker.bindPopup(
         `<strong>${bus.busNumber}</strong><br/>${bus.routeName}<br/>Destination: ${bus.destination}<br/>ETA: ${bus.etaMinutes} min`
@@ -120,9 +141,14 @@ const LeafletMiniMap = ({ buses, mapProviderUrl, mapApiKey }) => {
       const bounds = window.L.latLngBounds(markers.map((marker) => marker.getLatLng()));
       map.fitBounds(bounds.pad(0.2));
     }
-  }, [buses]);
+  }, [validBuses]);
 
-  return <div ref={containerRef} className="leaflet-mini-map" />;
+  return (
+    <>
+      <div ref={containerRef} className="leaflet-mini-map" />
+      {loadError && <div className="map-load-error">Map failed to load. Check network access.</div>}
+    </>
+  );
 };
 
 export default LeafletMiniMap;

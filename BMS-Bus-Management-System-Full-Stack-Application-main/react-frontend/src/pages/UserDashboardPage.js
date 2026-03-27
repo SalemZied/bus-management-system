@@ -17,25 +17,36 @@ const UserDashboardPage = () => {
   const [dashboardData, setDashboardData] = useState(fallbackData);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
 
-  const loadDashboard = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/user-dashboard`);
-      if (!response.ok) {
-        throw new Error("Backend unavailable");
-      }
-      const data = await response.json();
-      setDashboardData(data);
-      setIsUsingMockData(false);
-    } catch (error) {
-      setDashboardData(fallbackData);
-      setIsUsingMockData(true);
-    }
-  };
-
   useEffect(() => {
-    loadDashboard();
-    const refreshInterval = setInterval(loadDashboard, 30000);
-    return () => clearInterval(refreshInterval);
+    let isMounted = true;
+
+    const safeLoadDashboard = async () => {
+      let response = fallbackData;
+      let usingMock = false;
+
+      try {
+        const apiResponse = await fetch(`${API_BASE_URL}/api/user-dashboard`);
+        if (!apiResponse.ok) {
+          throw new Error("Backend unavailable");
+        }
+        response = await apiResponse.json();
+      } catch (error) {
+        usingMock = true;
+      }
+
+      if (isMounted) {
+        setDashboardData(response);
+        setIsUsingMockData(usingMock);
+      }
+    };
+
+    safeLoadDashboard();
+    const refreshInterval = setInterval(safeLoadDashboard, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   const nextArrival = useMemo(() => {
@@ -87,7 +98,7 @@ const UserDashboardPage = () => {
               <p className="kpi">{nextArrival}</p>
               <ul className="compact-list">
                 {dashboardData.buses.map((bus) => (
-                  <li key={bus.busNumber}>
+                  <li key={`${bus.busNumber}-${bus.nextStop}`}>
                     <div>
                       <strong>{bus.busNumber}</strong> → {bus.nextStop}
                     </div>
@@ -101,7 +112,7 @@ const UserDashboardPage = () => {
               <h2>Routes & disruptions</h2>
               <ul className="alerts-list">
                 {dashboardData.alerts.map((alert, index) => (
-                  <li key={`${alert.routeName}-${index}`}>
+                  <li key={`${alert.routeName}-${alert.alertType}-${index}`}>
                     <strong>{alert.routeName}</strong>
                     <span>{alert.destination}</span>
                     <p>
@@ -117,7 +128,7 @@ const UserDashboardPage = () => {
             <h2>Notifications</h2>
             <ul>
               {dashboardData.notifications.map((notification, index) => (
-                <li key={`${notification.title}-${index}`} className={`notification notification--${notification.level}`}>
+                <li key={`${notification.title}-${notification.createdAt}-${index}`} className={`notification notification--${notification.level}`}>
                   <div>
                     <strong>{notification.title}</strong>
                     <p>{notification.message}</p>

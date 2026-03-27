@@ -40,11 +40,11 @@ function Login() {
       </div>
       <form>
         <div className="input">
-          <i class="ri-user-fill"></i>
+          <i className="ri-user-fill"></i>
           <input type="text" onChange={(e)=>setUsername(e.target.value)} placeholder="Username" />
         </div>
         <div className="input">
-        <i class="ri-key-fill"></i>
+        <i className="ri-key-fill"></i>
           <input type="password" onChange={(e)=>setpassword(e.target.value)} placeholder="Password" />
         </div>
         <input onClick={authenticate} className="signup-btn" type="submit" value="LOGIN" />
