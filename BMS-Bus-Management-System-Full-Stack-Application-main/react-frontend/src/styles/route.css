@@ -35,6 +35,11 @@ h1 {
 
 .add-form {
   margin-bottom: 20px;
+  width: min(980px, 100%);
+  background: #fff;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
 }
 
 .add-form label {
@@ -128,7 +133,80 @@ h1 {
   color: black;
 }
 
-.buttons-to-add{
-  gap:10px;
+.buttons-to-add {
+  gap: 10px;
   display: flex;
+}
+
+.route-map-wrapper {
+  margin: 10px 0 16px;
+  border: 1px solid #dbe3f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.route-leaflet-map {
+  height: 300px;
+  width: 100%;
+}
+
+.map-picker-controls {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.map-mode {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.map-mode.active {
+  background: #0f172a;
+  color: #fff;
+}
+
+.map-helper-text {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+}
+
+.coordinates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.coordinates-grid label {
+  font-size: 13px;
+  color: #334155;
+}
+
+.coordinates-grid .wide-field {
+  grid-column: span 2;
+}
+
+.form-error {
+  color: #b91c1c;
+  margin-top: 10px;
+}
+
+.generate-pdf-button {
+  background-color: #2196F3;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.generate-pdf-button:hover {
+  background-color: #1976D2;
 }
