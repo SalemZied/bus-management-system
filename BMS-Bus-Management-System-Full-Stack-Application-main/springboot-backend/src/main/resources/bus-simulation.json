@@ -1,0 +1,60 @@
+{
+  "mapProviderUrl": "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  "buses": [
+    {
+      "busNumber": "BMS-101",
+      "routeName": "Downtown Loop",
+      "destination": "Central Station",
+      "latitude": 40.7194,
+      "longitude": -74.0060,
+      "etaMinutes": 4,
+      "status": "On time",
+      "delayMinutes": 0,
+      "nextStop": "5th Ave & Pine St"
+    },
+    {
+      "busNumber": "BMS-204",
+      "routeName": "University Express",
+      "destination": "North Campus",
+      "latitude": 40.7298,
+      "longitude": -73.9972,
+      "etaMinutes": 8,
+      "status": "Delayed",
+      "delayMinutes": 5,
+      "nextStop": "City Library"
+    },
+    {
+      "busNumber": "BMS-315",
+      "routeName": "Airport Connector",
+      "destination": "Airport Terminal 2",
+      "latitude": 40.7033,
+      "longitude": -74.0170,
+      "etaMinutes": 11,
+      "status": "On time",
+      "delayMinutes": 0,
+      "nextStop": "Harbor Blvd"
+    }
+  ],
+  "alerts": [
+    {
+      "routeName": "University Express",
+      "destination": "North Campus",
+      "alertType": "Delay",
+      "message": "Traffic congestion near Metro Bridge. Expect +6 minutes."
+    },
+    {
+      "routeName": "Airport Connector",
+      "destination": "Airport Terminal 2",
+      "alertType": "Diversion",
+      "message": "Temporary diversion via Harbor Road due to maintenance."
+    }
+  ],
+  "notifications": [
+    {
+      "level": "info",
+      "title": "Service running",
+      "message": "Dashboard simulation initialized.",
+      "createdAt": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

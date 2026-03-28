@@ -4,6 +4,9 @@ import "leaflet/dist/leaflet.css";
 import "../styles/user-dashboard.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const WS_BASE_URL =
+  process.env.REACT_APP_WS_BASE_URL ||
+  API_BASE_URL.replace(/^http/i, "ws").replace(/\/$/, "");
 
 const fallbackData = {
   lastUpdated: new Date().toISOString(),
@@ -11,44 +14,9 @@ const fallbackData = {
     process.env.REACT_APP_MAPS_PROVIDER_URL ||
     "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
   mapApiKey: process.env.REACT_APP_MAPS_API_KEY || "",
-  buses: [
-    {
-      busNumber: "BMS-101",
-      routeName: "Downtown Loop",
-      destination: "Central Station",
-      latitude: 40.7194,
-      longitude: -74.006,
-      etaMinutes: 4,
-      status: "On time",
-      nextStop: "5th Ave & Pine St",
-    },
-    {
-      busNumber: "BMS-204",
-      routeName: "University Express",
-      destination: "North Campus",
-      latitude: 40.7298,
-      longitude: -73.9972,
-      etaMinutes: 8,
-      status: "Delayed",
-      nextStop: "City Library",
-    },
-  ],
-  alerts: [
-    {
-      routeName: "University Express",
-      destination: "North Campus",
-      alertType: "Delay",
-      message: "Traffic congestion near Metro Bridge. Expect +6 minutes.",
-    },
-  ],
-  notifications: [
-    {
-      level: "info",
-      title: "Bus approaching",
-      message: "BMS-101 arrives in about 4 minutes.",
-      createdAt: new Date().toISOString(),
-    },
-  ],
+  buses: [],
+  alerts: [],
+  notifications: [],
 };
 
 const FitMapToBuses = ({ buses }) => {
@@ -69,6 +37,9 @@ const FitMapToBuses = ({ buses }) => {
 const UserDashboardPage = () => {
   const [dashboardData, setDashboardData] = useState(fallbackData);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
+  const [selectedLine, setSelectedLine] = useState("ALL");
+  const [selectedStatus, setSelectedStatus] = useState("ALL");
+  const [selectedDelay, setSelectedDelay] = useState("ALL");
 
   const loadDashboard = async () => {
     try {
@@ -87,30 +58,76 @@ const UserDashboardPage = () => {
 
   useEffect(() => {
     loadDashboard();
-    const refreshInterval = setInterval(loadDashboard, 30000);
-    return () => clearInterval(refreshInterval);
+
+    const socket = new WebSocket(`${WS_BASE_URL}/ws/user-dashboard`);
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        setDashboardData(payload);
+        setIsUsingMockData(false);
+      } catch (error) {
+        // Ignore malformed websocket events.
+      }
+    };
+
+    socket.onerror = () => {
+      setIsUsingMockData(true);
+    };
+
+    return () => {
+      socket.close();
+    };
   }, []);
 
   const buses = dashboardData.buses || [];
 
+  const lineOptions = useMemo(
+    () => ["ALL", ...new Set(buses.map((bus) => bus.routeName).filter(Boolean))],
+    [buses],
+  );
+
+  const statusOptions = useMemo(
+    () => ["ALL", ...new Set(buses.map((bus) => bus.status).filter(Boolean))],
+    [buses],
+  );
+
+  const filteredBuses = useMemo(() => {
+    return buses.filter((bus) => {
+      if (selectedLine !== "ALL" && bus.routeName !== selectedLine) {
+        return false;
+      }
+      if (selectedStatus !== "ALL" && bus.status !== selectedStatus) {
+        return false;
+      }
+      if (selectedDelay === "DELAYED_ONLY" && (bus.delayMinutes || 0) <= 0) {
+        return false;
+      }
+      if (selectedDelay === "NO_DELAY" && (bus.delayMinutes || 0) > 0) {
+        return false;
+      }
+      return true;
+    });
+  }, [buses, selectedDelay, selectedLine, selectedStatus]);
+
   const nextArrival = useMemo(() => {
-    if (buses.length === 0) {
+    if (filteredBuses.length === 0) {
       return "No active bus";
     }
 
-    const nextBus = [...buses].sort((a, b) => a.etaMinutes - b.etaMinutes)[0];
+    const nextBus = [...filteredBuses].sort((a, b) => a.etaMinutes - b.etaMinutes)[0];
     return `${nextBus.busNumber} • ${nextBus.etaMinutes} min`;
-  }, [buses]);
+  }, [filteredBuses]);
 
   const mapCenter = useMemo(() => {
-    if (buses.length === 0) {
+    if (filteredBuses.length === 0) {
       return [40.7228, -74.0045];
     }
 
-    const totalLat = buses.reduce((sum, bus) => sum + bus.latitude, 0);
-    const totalLon = buses.reduce((sum, bus) => sum + bus.longitude, 0);
-    return [totalLat / buses.length, totalLon / buses.length];
-  }, [buses]);
+    const totalLat = filteredBuses.reduce((sum, bus) => sum + bus.latitude, 0);
+    const totalLon = filteredBuses.reduce((sum, bus) => sum + bus.longitude, 0);
+    return [totalLat / filteredBuses.length, totalLon / filteredBuses.length];
+  }, [filteredBuses]);
 
   return (
     <div className="user-dashboard">
@@ -123,6 +140,42 @@ const UserDashboardPage = () => {
         {isUsingMockData && <span className="user-dashboard__mock-badge">Mock data enabled</span>}
       </header>
 
+      <section className="user-dashboard__filters card">
+        <h2>Filtres</h2>
+        <div className="filters-row">
+          <label>
+            Ligne
+            <select value={selectedLine} onChange={(event) => setSelectedLine(event.target.value)}>
+              {lineOptions.map((line) => (
+                <option key={line} value={line}>
+                  {line}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Statut
+            <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Retard
+            <select value={selectedDelay} onChange={(event) => setSelectedDelay(event.target.value)}>
+              <option value="ALL">ALL</option>
+              <option value="DELAYED_ONLY">DELAYED_ONLY</option>
+              <option value="NO_DELAY">NO_DELAY</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
       <section className="user-dashboard__grid">
         <article className="card card--map">
           <h2>Live bus map (Leaflet)</h2>
@@ -132,8 +185,8 @@ const UserDashboardPage = () => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
                 url={dashboardData.mapProviderUrl}
               />
-              <FitMapToBuses buses={buses} />
-              {buses.map((bus) => (
+              <FitMapToBuses buses={filteredBuses} />
+              {filteredBuses.map((bus) => (
                 <CircleMarker
                   key={bus.busNumber}
                   center={[bus.latitude, bus.longitude]}
@@ -156,6 +209,8 @@ const UserDashboardPage = () => {
                     Next stop: {bus.nextStop}
                     <br />
                     ETA: {bus.etaMinutes} min
+                    <br />
+                    Delay: {bus.delayMinutes || 0} min
                   </Popup>
                 </CircleMarker>
               ))}
@@ -167,9 +222,9 @@ const UserDashboardPage = () => {
           <h2>ETA</h2>
           <p className="kpi">{nextArrival}</p>
           <ul>
-            {buses.map((bus) => (
+            {filteredBuses.map((bus) => (
               <li key={bus.busNumber}>
-                {bus.busNumber} → {bus.nextStop} in <strong>{bus.etaMinutes} min</strong>
+                {bus.busNumber} → {bus.nextStop} in <strong>{bus.etaMinutes} min</strong> ({bus.status}, retard {bus.delayMinutes || 0} min)
               </li>
             ))}
           </ul>
