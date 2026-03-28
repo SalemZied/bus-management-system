@@ -56,9 +56,9 @@ const SchedulePage = () => {
           const schedulesData = await schedulesResponse.json();
           const schedulesWithDetails = schedulesData.map(schedule => ({
             ...schedule,
-            bus: busesData.find(bus => bus.id === schedule.bus.id),
-            route: routesData.find(route => route.id === schedule.route.id),
-            driver: driversData.find(driver => driver.id === schedule.driver.id)
+            bus: busesData.find(bus => bus.id === schedule.bus?.id) || schedule.bus || null,
+            route: routesData.find(route => route.id === schedule.route?.id) || schedule.route || null,
+            driver: driversData.find(driver => driver.id === schedule.driver?.id) || schedule.driver || null
           }));
           setSchedules(schedulesWithDetails);
         } else {
@@ -150,9 +150,9 @@ const SchedulePage = () => {
   const handleEditSchedule = (id) => {
     const selectedSchedule = schedules.find((schedule) => schedule.id === id);
     if (selectedSchedule) {
-      setBusId(selectedSchedule.bus.id);
-      setRouteId(selectedSchedule.route.id);
-      setDriverId(selectedSchedule.driver.id);
+      setBusId(selectedSchedule.bus?.id || '');
+      setRouteId(selectedSchedule.route?.id || '');
+      setDriverId(selectedSchedule.driver?.id || '');
       setDepartureTime(selectedSchedule.departureTime);
       setArrivalTime(selectedSchedule.arrivalTime);
       setEditScheduleId(id);
@@ -291,9 +291,9 @@ const SchedulePage = () => {
           <tbody>
             {schedules.map((schedule) => (
               <tr key={schedule.id}>
-              <td>{schedule.bus.busName}</td>
-              <td>{schedule.route.name}</td>
-              <td>{schedule.driver.name}</td>              
+              <td>{schedule.bus?.busName || '—'}</td>
+              <td>{schedule.route?.name || '—'}</td>
+              <td>{schedule.driver?.name || '—'}</td>              
                 <td>{schedule.departureTime}</td>
                 <td>{schedule.arrivalTime}</td>
                 <td>
