@@ -44,8 +44,12 @@ public class BusController {
 
     @PostMapping
     public ResponseEntity<Bus> createBus(@RequestBody Bus bus) {
-        Bus createdBus = busService.createBus(bus);
-        return new ResponseEntity<>(createdBus, HttpStatus.CREATED);
+        try {
+            Bus createdBus = busService.createBus(bus);
+            return new ResponseEntity<>(createdBus, HttpStatus.CREATED);
+        } catch (IllegalArgumentException exception) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/{id}")
@@ -53,8 +57,12 @@ public class BusController {
         Optional<Bus> existingBus = busService.getBusById(id);
         if (existingBus.isPresent()) {
             bus.setId(id);
-            Bus updatedBus = busService.updateBus(bus);
-            return new ResponseEntity<>(updatedBus, HttpStatus.OK);
+            try {
+                Bus updatedBus = busService.updateBus(bus);
+                return new ResponseEntity<>(updatedBus, HttpStatus.OK);
+            } catch (IllegalArgumentException exception) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

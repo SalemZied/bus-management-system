@@ -24,6 +24,24 @@ public class Route {
     @Column(name = "destination")
     private String destination;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "source_latitude")
+    private Double sourceLatitude;
+
+    @Column(name = "source_longitude")
+    private Double sourceLongitude;
+
+    @Column(name = "destination_latitude")
+    private Double destinationLatitude;
+
+    @Column(name = "destination_longitude")
+    private Double destinationLongitude;
+
 	public Long getId() {
 		return id;
 	}
@@ -56,12 +74,75 @@ public class Route {
 		this.destination = destination;
 	}
 
+	public Double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
+
+	public Double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
+
+	public Double getSourceLatitude() {
+		return sourceLatitude;
+	}
+
+	public void setSourceLatitude(Double sourceLatitude) {
+		this.sourceLatitude = sourceLatitude;
+	}
+
+	public Double getSourceLongitude() {
+		return sourceLongitude;
+	}
+
+	public void setSourceLongitude(Double sourceLongitude) {
+		this.sourceLongitude = sourceLongitude;
+	}
+
+	public Double getDestinationLatitude() {
+		return destinationLatitude;
+	}
+
+	public void setDestinationLatitude(Double destinationLatitude) {
+		this.destinationLatitude = destinationLatitude;
+	}
+
+	public Double getDestinationLongitude() {
+		return destinationLongitude;
+	}
+
+	public void setDestinationLongitude(Double destinationLongitude) {
+		this.destinationLongitude = destinationLongitude;
+	}
+
 	public Route(Long id, String name, String source, String destination) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.source = source;
 		this.destination = destination;
+	}
+
+	public Route(Long id, String name, String source, String destination, Double latitude, Double longitude,
+			Double sourceLatitude, Double sourceLongitude, Double destinationLatitude, Double destinationLongitude) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.source = source;
+		this.destination = destination;
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.sourceLatitude = sourceLatitude;
+		this.sourceLongitude = sourceLongitude;
+		this.destinationLatitude = destinationLatitude;
+		this.destinationLongitude = destinationLongitude;
 	}
 
 	public Route() {

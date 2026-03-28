@@ -49,6 +49,13 @@ h1 {
   border-radius: 4px;
 }
 
+.add-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 .form-buttons {
   display: flex;
   justify-content: space-between;
@@ -164,4 +171,9 @@ h1 {
 .search-container input[type="text"]:focus {
   outline: none;
   border-color: #0066ff;
+}
+
+.form-error {
+  color: #b91c1c;
+  margin-bottom: 10px;
 }
