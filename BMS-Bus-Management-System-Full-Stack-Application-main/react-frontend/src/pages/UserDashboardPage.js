@@ -8,6 +8,8 @@ const WS_BASE_URL =
   process.env.REACT_APP_WS_BASE_URL ||
   API_BASE_URL.replace(/^http/i, "ws").replace(/\/$/, "");
 
+const TUNISIA_CENTER = [34.2, 9.6];
+
 const fallbackData = {
   lastUpdated: new Date().toISOString(),
   mapProviderUrl:
@@ -24,11 +26,12 @@ const FitMapToBuses = ({ buses }) => {
 
   useEffect(() => {
     if (!buses.length) {
+      map.setView(TUNISIA_CENTER, 7);
       return;
     }
 
     const latLngs = buses.map((bus) => [bus.latitude, bus.longitude]);
-    map.fitBounds(latLngs, { padding: [36, 36], maxZoom: 14 });
+    map.fitBounds(latLngs, { padding: [40, 40], maxZoom: 11 });
   }, [buses, map]);
 
   return null;
@@ -110,6 +113,9 @@ const UserDashboardPage = () => {
     });
   }, [buses, selectedDelay, selectedLine, selectedStatus]);
 
+  const delayedBusesCount = filteredBuses.filter((bus) => (bus.delayMinutes || 0) > 0).length;
+  const onTimeCount = filteredBuses.length - delayedBusesCount;
+
   const nextArrival = useMemo(() => {
     if (filteredBuses.length === 0) {
       return "No active bus";
@@ -119,26 +125,40 @@ const UserDashboardPage = () => {
     return `${nextBus.busNumber} • ${nextBus.etaMinutes} min`;
   }, [filteredBuses]);
 
-  const mapCenter = useMemo(() => {
-    if (filteredBuses.length === 0) {
-      return [40.7228, -74.0045];
-    }
-
-    const totalLat = filteredBuses.reduce((sum, bus) => sum + bus.latitude, 0);
-    const totalLon = filteredBuses.reduce((sum, bus) => sum + bus.longitude, 0);
-    return [totalLat / filteredBuses.length, totalLon / filteredBuses.length];
-  }, [filteredBuses]);
-
   return (
     <div className="user-dashboard">
-      <header className="user-dashboard__header">
-        <h1>Bus Management (User)</h1>
-        <p>Suivi passager en temps réel: carte, ETA, itinéraires et notifications.</p>
-        <span className="user-dashboard__updated-at">
-          Updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
-        </span>
-        {isUsingMockData && <span className="user-dashboard__mock-badge">Mock data enabled</span>}
+      <header className="dashboard-hero">
+        <div>
+          <p className="hero-eyebrow">Passenger Live Dashboard</p>
+          <h1>Transport urbain en temps réel</h1>
+          <p className="hero-subtitle">
+            Couverture multi-villes (Tunis, Ariana, Sousse, Sfax, Bizerte, Monastir, Gabès) avec suivi continu des bus.
+          </p>
+        </div>
+        <div className="hero-meta">
+          <span>Last sync: {new Date(dashboardData.lastUpdated).toLocaleString()}</span>
+          {isUsingMockData && <span className="user-dashboard__mock-badge">Live backend indisponible</span>}
+        </div>
       </header>
+
+      <section className="kpi-grid">
+        <article className="kpi-card">
+          <h3>Bus visibles</h3>
+          <p>{filteredBuses.length}</p>
+        </article>
+        <article className="kpi-card">
+          <h3>À l&apos;heure</h3>
+          <p>{onTimeCount}</p>
+        </article>
+        <article className="kpi-card warning">
+          <h3>En retard</h3>
+          <p>{delayedBusesCount}</p>
+        </article>
+        <article className="kpi-card">
+          <h3>Prochaine arrivée</h3>
+          <p>{nextArrival}</p>
+        </article>
+      </section>
 
       <section className="user-dashboard__filters card">
         <h2>Filtres</h2>
@@ -178,9 +198,12 @@ const UserDashboardPage = () => {
 
       <section className="user-dashboard__grid">
         <article className="card card--map">
-          <h2>Live bus map (Leaflet)</h2>
+          <div className="section-title-row">
+            <h2>Carte Live Leaflet — Tunisie</h2>
+            <span>{filteredBuses.length} bus actifs</span>
+          </div>
           <div className="map-area">
-            <MapContainer center={mapCenter} zoom={12} scrollWheelZoom className="leaflet-map">
+            <MapContainer center={TUNISIA_CENTER} zoom={7} scrollWheelZoom className="leaflet-map">
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; CARTO'
                 url={dashboardData.mapProviderUrl}
@@ -190,11 +213,11 @@ const UserDashboardPage = () => {
                 <CircleMarker
                   key={bus.busNumber}
                   center={[bus.latitude, bus.longitude]}
-                  radius={10}
+                  radius={9}
                   pathOptions={{
-                    color: bus.status === "Delayed" ? "#d97706" : "#1f6feb",
-                    fillColor: bus.status === "Delayed" ? "#f59e0b" : "#2563eb",
-                    fillOpacity: 0.9,
+                    color: bus.status === "Delayed" ? "#f59e0b" : "#0ea5e9",
+                    fillColor: bus.status === "Delayed" ? "#f97316" : "#0284c7",
+                    fillOpacity: 0.92,
                     weight: 2,
                   }}
                 >
@@ -206,11 +229,11 @@ const UserDashboardPage = () => {
                     <br />
                     {bus.routeName} → {bus.destination}
                     <br />
-                    Next stop: {bus.nextStop}
+                    Prochain arrêt: {bus.nextStop}
                     <br />
                     ETA: {bus.etaMinutes} min
                     <br />
-                    Delay: {bus.delayMinutes || 0} min
+                    Retard: {bus.delayMinutes || 0} min
                   </Popup>
                 </CircleMarker>
               ))}
@@ -219,12 +242,20 @@ const UserDashboardPage = () => {
         </article>
 
         <article className="card">
-          <h2>ETA</h2>
-          <p className="kpi">{nextArrival}</p>
-          <ul>
+          <h2>Flotte en direct</h2>
+          <ul className="fleet-list">
             {filteredBuses.map((bus) => (
               <li key={bus.busNumber}>
-                {bus.busNumber} → {bus.nextStop} in <strong>{bus.etaMinutes} min</strong> ({bus.status}, retard {bus.delayMinutes || 0} min)
+                <div>
+                  <strong>{bus.busNumber}</strong>
+                  <p>
+                    {bus.routeName} • {bus.destination}
+                  </p>
+                </div>
+                <div className="fleet-meta">
+                  <span>{bus.etaMinutes} min</span>
+                  <small>{bus.status}</small>
+                </div>
               </li>
             ))}
           </ul>
@@ -232,10 +263,13 @@ const UserDashboardPage = () => {
 
         <article className="card">
           <h2>Routes & disruptions</h2>
-          <ul>
+          <ul className="insight-list">
             {dashboardData.alerts.map((alert, index) => (
               <li key={`${alert.routeName}-${index}`}>
-                <strong>{alert.routeName}</strong> ({alert.destination}) — {alert.alertType}: {alert.message}
+                <strong>{alert.routeName}</strong> ({alert.destination})
+                <p>
+                  {alert.alertType}: {alert.message}
+                </p>
               </li>
             ))}
           </ul>
@@ -243,7 +277,7 @@ const UserDashboardPage = () => {
 
         <article className="card">
           <h2>Notifications</h2>
-          <ul>
+          <ul className="insight-list">
             {dashboardData.notifications.map((notification, index) => (
               <li key={`${notification.title}-${index}`} className={`notification notification--${notification.level}`}>
                 <strong>{notification.title}</strong>

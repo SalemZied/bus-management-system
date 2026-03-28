@@ -15,13 +15,13 @@ public class Bus {
     @Column(name = "bus_id")
     private Long id;
 
-    @Column(name = "bus_number",unique=true)
+    @Column(name = "bus_number", unique = true)
     private String busNumber;
 
     @Column(name = "bus_name")
     private String busName;
 
-	@Column(name = "capacity")
+    @Column(name = "capacity")
     private Integer capacity;
 
     @Column(name = "make")
@@ -30,66 +30,149 @@ public class Bus {
     @Column(name = "model")
     private String model;
 
-	public Long getId() {
-		return id;
-	}
+    @Column(name = "route_id")
+    private Long routeId;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Column(name = "current_latitude")
+    private Double currentLatitude;
 
-	public String getBusNumber() {
-		return busNumber;
-	}
+    @Column(name = "current_longitude")
+    private Double currentLongitude;
 
-	public void setBusNumber(String busNumber) {
-		this.busNumber = busNumber;
-	}
-	
-	public String getBusName() {
-		return busName;
-	}
-	
-	public void setBusName(String busName) {
-		this.busName = busName;
-	}
+    @Column(name = "status")
+    private String status;
 
-	public Integer getCapacity() {
-		return capacity;
-	}
+    @Column(name = "delay_minutes")
+    private Integer delayMinutes;
 
-	public void setCapacity(Integer capacity) {
-		this.capacity = capacity;
-	}
+    @Column(name = "eta_minutes")
+    private Integer etaMinutes;
 
-	public int getMake() {
-		return make;
-	}
+    @Column(name = "next_stop")
+    private String nextStop;
 
-	public void setMake(int make) {
-		this.make = make;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getModel() {
-		return model;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setModel(String model) {
-		this.model = model;
-	}
-	
-	public Bus(Long id, String busNumber, String busName, Integer capacity, int make, String model) {
-		super();
-		this.id = id;
-		this.busNumber = busNumber;
-		this.busName = busName;
-		this.capacity = capacity;
-		this.make = make;
-		this.model = model;
-	}
+    public String getBusNumber() {
+        return busNumber;
+    }
 
-	public Bus() {
-		
-	}
-    
+    public void setBusNumber(String busNumber) {
+        this.busNumber = busNumber;
+    }
+
+    public String getBusName() {
+        return busName;
+    }
+
+    public void setBusName(String busName) {
+        this.busName = busName;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public int getMake() {
+        return make;
+    }
+
+    public void setMake(int make) {
+        this.make = make;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public Long getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(Long routeId) {
+        this.routeId = routeId;
+    }
+
+    public Double getCurrentLatitude() {
+        return currentLatitude;
+    }
+
+    public void setCurrentLatitude(Double currentLatitude) {
+        this.currentLatitude = currentLatitude;
+    }
+
+    public Double getCurrentLongitude() {
+        return currentLongitude;
+    }
+
+    public void setCurrentLongitude(Double currentLongitude) {
+        this.currentLongitude = currentLongitude;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getDelayMinutes() {
+        return delayMinutes;
+    }
+
+    public void setDelayMinutes(Integer delayMinutes) {
+        this.delayMinutes = delayMinutes;
+    }
+
+    public Integer getEtaMinutes() {
+        return etaMinutes;
+    }
+
+    public void setEtaMinutes(Integer etaMinutes) {
+        this.etaMinutes = etaMinutes;
+    }
+
+    public String getNextStop() {
+        return nextStop;
+    }
+
+    public void setNextStop(String nextStop) {
+        this.nextStop = nextStop;
+    }
+
+    public Bus(Long id, String busNumber, String busName, Integer capacity, int make, String model, Long routeId,
+            Double currentLatitude, Double currentLongitude, String status, Integer delayMinutes, Integer etaMinutes,
+            String nextStop) {
+        this.id = id;
+        this.busNumber = busNumber;
+        this.busName = busName;
+        this.capacity = capacity;
+        this.make = make;
+        this.model = model;
+        this.routeId = routeId;
+        this.currentLatitude = currentLatitude;
+        this.currentLongitude = currentLongitude;
+        this.status = status;
+        this.delayMinutes = delayMinutes;
+        this.etaMinutes = etaMinutes;
+        this.nextStop = nextStop;
+    }
+
+    public Bus() {
+    }
 }
