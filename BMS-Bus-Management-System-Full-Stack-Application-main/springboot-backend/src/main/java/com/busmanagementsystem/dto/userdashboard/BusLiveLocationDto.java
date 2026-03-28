@@ -8,10 +8,11 @@ public class BusLiveLocationDto {
     private double longitude;
     private int etaMinutes;
     private String status;
+    private int delayMinutes;
     private String nextStop;
 
     public BusLiveLocationDto(String busNumber, String routeName, String destination, double latitude, double longitude,
-            int etaMinutes, String status, String nextStop) {
+            int etaMinutes, String status, int delayMinutes, String nextStop) {
         this.busNumber = busNumber;
         this.routeName = routeName;
         this.destination = destination;
@@ -19,6 +20,7 @@ public class BusLiveLocationDto {
         this.longitude = longitude;
         this.etaMinutes = etaMinutes;
         this.status = status;
+        this.delayMinutes = delayMinutes;
         this.nextStop = nextStop;
     }
 
@@ -48,6 +50,10 @@ public class BusLiveLocationDto {
 
     public String getStatus() {
         return status;
+    }
+
+    public int getDelayMinutes() {
+        return delayMinutes;
     }
 
     public String getNextStop() {
