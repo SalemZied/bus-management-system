@@ -44,8 +44,12 @@ public class RouteController {
 
     @PostMapping
     public ResponseEntity<Route> createRoute(@RequestBody Route route) {
-        Route createdRoute = routeService.createRoute(route);
-        return new ResponseEntity<>(createdRoute, HttpStatus.CREATED);
+        try {
+            Route createdRoute = routeService.createRoute(route);
+            return new ResponseEntity<>(createdRoute, HttpStatus.CREATED);
+        } catch (IllegalArgumentException exception) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/{id}")
@@ -53,8 +57,12 @@ public class RouteController {
         Optional<Route> existingRoute = routeService.getRouteById(id);
         if (existingRoute.isPresent()) {
             route.setId(id);
-            Route updatedRoute = routeService.updateRoute(route);
-            return new ResponseEntity<>(updatedRoute, HttpStatus.OK);
+            try {
+                Route updatedRoute = routeService.updateRoute(route);
+                return new ResponseEntity<>(updatedRoute, HttpStatus.OK);
+            } catch (IllegalArgumentException exception) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }

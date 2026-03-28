@@ -25,13 +25,22 @@ public class Bus {
     private Integer capacity;
 
     @Column(name = "make")
-    private int make;
+    private String make;
 
     @Column(name = "model")
     private String model;
 
     @Column(name = "route_id")
     private Long routeId;
+
+    @Column(name = "driver_id")
+    private Long driverId;
+
+    @Column(name = "source")
+    private String source;
+
+    @Column(name = "destination")
+    private String destination;
 
     @Column(name = "current_latitude")
     private Double currentLatitude;
@@ -83,11 +92,11 @@ public class Bus {
         this.capacity = capacity;
     }
 
-    public int getMake() {
+    public String getMake() {
         return make;
     }
 
-    public void setMake(int make) {
+    public void setMake(String make) {
         this.make = make;
     }
 
@@ -105,6 +114,30 @@ public class Bus {
 
     public void setRouteId(Long routeId) {
         this.routeId = routeId;
+    }
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
+    public void setDestination(String destination) {
+        this.destination = destination;
     }
 
     public Double getCurrentLatitude() {
@@ -155,9 +188,9 @@ public class Bus {
         this.nextStop = nextStop;
     }
 
-    public Bus(Long id, String busNumber, String busName, Integer capacity, int make, String model, Long routeId,
-            Double currentLatitude, Double currentLongitude, String status, Integer delayMinutes, Integer etaMinutes,
-            String nextStop) {
+    public Bus(Long id, String busNumber, String busName, Integer capacity, String make, String model, Long routeId,
+            Long driverId, String source, String destination, Double currentLatitude, Double currentLongitude,
+            String status, Integer delayMinutes, Integer etaMinutes, String nextStop) {
         this.id = id;
         this.busNumber = busNumber;
         this.busName = busName;
@@ -165,6 +198,9 @@ public class Bus {
         this.make = make;
         this.model = model;
         this.routeId = routeId;
+        this.driverId = driverId;
+        this.source = source;
+        this.destination = destination;
         this.currentLatitude = currentLatitude;
         this.currentLongitude = currentLongitude;
         this.status = status;

@@ -10,4 +10,6 @@ import com.busmanagementsystem.entity.BusStop;
 @Repository
 public interface BusStopRepository extends JpaRepository<BusStop, Long> {
     List<BusStop> findByRouteIdOrderByStopOrderAsc(Long routeId);
+
+    void deleteByRouteId(Long routeId);
 }
