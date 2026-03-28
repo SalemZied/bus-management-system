@@ -42,6 +42,15 @@ public class Route {
     @Column(name = "destination_longitude")
     private Double destinationLongitude;
 
+    @Column(name = "configured_bus_count")
+    private Integer configuredBusCount;
+
+    @Column(name = "departure_times", columnDefinition = "TEXT")
+    private String departureTimes;
+
+    @Column(name = "waypoints_json", columnDefinition = "TEXT")
+    private String waypointsJson;
+
 	public Long getId() {
 		return id;
 	}
@@ -143,6 +152,30 @@ public class Route {
 		this.sourceLongitude = sourceLongitude;
 		this.destinationLatitude = destinationLatitude;
 		this.destinationLongitude = destinationLongitude;
+	}
+
+	public Integer getConfiguredBusCount() {
+		return configuredBusCount;
+	}
+
+	public void setConfiguredBusCount(Integer configuredBusCount) {
+		this.configuredBusCount = configuredBusCount;
+	}
+
+	public String getDepartureTimes() {
+		return departureTimes;
+	}
+
+	public void setDepartureTimes(String departureTimes) {
+		this.departureTimes = departureTimes;
+	}
+
+	public String getWaypointsJson() {
+		return waypointsJson;
+	}
+
+	public void setWaypointsJson(String waypointsJson) {
+		this.waypointsJson = waypointsJson;
 	}
 
 	public Route() {

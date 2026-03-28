@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CircleMarker, MapContainer, Popup, TileLayer, useMapEvents } from 'react-leaflet';
+import { CircleMarker, MapContainer, Polyline, Popup, TileLayer, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/route.css';
 import jsPDF from 'jspdf';
@@ -34,6 +34,9 @@ const RoutePage = () => {
   const [sourceLongitude, setSourceLongitude] = useState('');
   const [destinationLatitude, setDestinationLatitude] = useState('');
   const [destinationLongitude, setDestinationLongitude] = useState('');
+  const [configuredBusCount, setConfiguredBusCount] = useState(1);
+  const [departureTimes, setDepartureTimes] = useState('06:00, 08:00');
+  const [waypoints, setWaypoints] = useState([]);
   const [activePicker, setActivePicker] = useState('source');
   const [editRouteId, setEditRouteId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,6 +79,9 @@ const RoutePage = () => {
     setSourceLongitude('');
     setDestinationLatitude('');
     setDestinationLongitude('');
+    setConfiguredBusCount(1);
+    setDepartureTimes('06:00, 08:00');
+    setWaypoints([]);
     setActivePicker('source');
     setShowForm(false);
     setEditRouteId(null);
@@ -96,12 +102,24 @@ const RoutePage = () => {
       return;
     }
 
-    setDestinationLatitude(pickedLat);
-    setDestinationLongitude(pickedLng);
-    if (!destination) {
-      setDestination(`Stop ${pickedLat}, ${pickedLng}`);
+    if (picker === 'destination') {
+      setDestinationLatitude(pickedLat);
+      setDestinationLongitude(pickedLng);
+      if (!destination) {
+        setDestination(`Stop ${pickedLat}, ${pickedLng}`);
+      }
+      syncRouteCenter(sourceLatitude, sourceLongitude, pickedLat, pickedLng);
+      return;
     }
-    syncRouteCenter(sourceLatitude, sourceLongitude, pickedLat, pickedLng);
+
+    setWaypoints((prev) => [
+      ...prev,
+      {
+        name: `Waypoint ${prev.length + 1}`,
+        latitude: Number(pickedLat),
+        longitude: Number(pickedLng),
+      },
+    ]);
   };
 
   const handleFormSubmit = async (e) => {
@@ -118,6 +136,9 @@ const RoutePage = () => {
       sourceLongitude: Number(sourceLongitude),
       destinationLatitude: Number(destinationLatitude),
       destinationLongitude: Number(destinationLongitude),
+      configuredBusCount: Number(configuredBusCount),
+      departureTimes,
+      waypointsJson: JSON.stringify(waypoints),
     };
 
     try {
@@ -152,7 +173,7 @@ const RoutePage = () => {
 
         resetForm();
       } else {
-        setFormError('Unable to save route. Verify stop names and selected map coordinates.');
+        setFormError('Unable to save route. Verify stop names, coordinates and departure times (HH:mm).');
       }
     } catch (error) {
       console.error('An error occurred:', error);
@@ -172,6 +193,13 @@ const RoutePage = () => {
       setSourceLongitude(selectedRoute.sourceLongitude ?? '');
       setDestinationLatitude(selectedRoute.destinationLatitude ?? '');
       setDestinationLongitude(selectedRoute.destinationLongitude ?? '');
+      setConfiguredBusCount(selectedRoute.configuredBusCount ?? 1);
+      setDepartureTimes(selectedRoute.departureTimes ?? '06:00, 08:00');
+      try {
+        setWaypoints(selectedRoute.waypointsJson ? JSON.parse(selectedRoute.waypointsJson) : []);
+      } catch (error) {
+        setWaypoints([]);
+      }
       setEditRouteId(id);
       setShowForm(true);
       setFormError('');
@@ -219,6 +247,12 @@ const RoutePage = () => {
       .some((field) => field.toLowerCase().includes(query));
   });
 
+  const polylinePositions = [
+    sourceLatitude && sourceLongitude ? [Number(sourceLatitude), Number(sourceLongitude)] : null,
+    ...waypoints.map((wp) => [Number(wp.latitude), Number(wp.longitude)]),
+    destinationLatitude && destinationLongitude ? [Number(destinationLatitude), Number(destinationLongitude)] : null,
+  ].filter(Boolean);
+
   return (
     <div className="layout">
       <Sidebar />
@@ -257,20 +291,48 @@ const RoutePage = () => {
                 required
               />
 
+              <label className="form-field-input-data" htmlFor="configuredBusCount">
+                Number of buses on this route:
+              </label>
+              <input
+                type="number"
+                id="configuredBusCount"
+                min="1"
+                max="100"
+                value={configuredBusCount}
+                onChange={(e) => setConfiguredBusCount(e.target.value)}
+                required
+              />
+
+              <label className="form-field-input-data" htmlFor="departureTimes">
+                Departure times (HH:mm separated by commas):
+              </label>
+              <input
+                type="text"
+                id="departureTimes"
+                value={departureTimes}
+                onChange={(e) => setDepartureTimes(e.target.value)}
+                placeholder="06:00, 07:30, 09:00"
+                required
+              />
+
               <div className="map-picker-controls">
                 <button type="button" className={activePicker === 'source' ? 'map-mode active' : 'map-mode'} onClick={() => setActivePicker('source')}>
-                  Pick departure on map
+                  Pick departure
                 </button>
                 <button
                   type="button"
                   className={activePicker === 'destination' ? 'map-mode active' : 'map-mode'}
                   onClick={() => setActivePicker('destination')}
                 >
-                  Pick destination on map
+                  Pick destination
+                </button>
+                <button type="button" className={activePicker === 'waypoint' ? 'map-mode active' : 'map-mode'} onClick={() => setActivePicker('waypoint')}>
+                  Add waypoint
                 </button>
               </div>
 
-              <p className="map-helper-text">Active mode: {activePicker}. Click on the map to capture real coordinates.</p>
+              <p className="map-helper-text">Active mode: {activePicker}. Click on the map to capture route geometry.</p>
 
               <div className="route-map-wrapper">
                 <MapContainer center={TUNISIA_CENTER} zoom={7} scrollWheelZoom className="route-leaflet-map">
@@ -286,6 +348,12 @@ const RoutePage = () => {
                     </CircleMarker>
                   )}
 
+                  {waypoints.map((wp, index) => (
+                    <CircleMarker key={`${wp.latitude}-${wp.longitude}-${index}`} center={[Number(wp.latitude), Number(wp.longitude)]} radius={7} pathOptions={{ color: '#2563eb' }}>
+                      <Popup>{wp.name}</Popup>
+                    </CircleMarker>
+                  ))}
+
                   {destinationLatitude && destinationLongitude && (
                     <CircleMarker
                       center={[Number(destinationLatitude), Number(destinationLongitude)]}
@@ -295,8 +363,36 @@ const RoutePage = () => {
                       <Popup>Destination: {destination}</Popup>
                     </CircleMarker>
                   )}
+
+                  {polylinePositions.length >= 2 && <Polyline positions={polylinePositions} pathOptions={{ color: '#1d4ed8', weight: 4 }} />}
                 </MapContainer>
               </div>
+
+              {waypoints.length > 0 && (
+                <div className="coordinates-grid">
+                  {waypoints.map((wp, index) => (
+                    <label key={`waypoint-name-${index}`}>
+                      Waypoint {index + 1} name:
+                      <input
+                        type="text"
+                        value={wp.name}
+                        onChange={(event) => {
+                          const next = [...waypoints];
+                          next[index] = { ...next[index], name: event.target.value };
+                          setWaypoints(next);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="cancel-button"
+                        onClick={() => setWaypoints(waypoints.filter((_, waypointIndex) => waypointIndex !== index))}
+                      >
+                        Remove
+                      </button>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               <div className="coordinates-grid">
                 <label>
@@ -377,6 +473,8 @@ const RoutePage = () => {
                   <th>Name</th>
                   <th>Source</th>
                   <th>Destination</th>
+                  <th>Bus Count</th>
+                  <th>Departures</th>
                   <th>Route Coordinates</th>
                   <th>Action</th>
                 </tr>
@@ -387,6 +485,8 @@ const RoutePage = () => {
                     <td>{route.name}</td>
                     <td>{route.source}</td>
                     <td>{route.destination}</td>
+                    <td>{route.configuredBusCount ?? 1}</td>
+                    <td>{route.departureTimes || '—'}</td>
                     <td>
                       {route.latitude ?? '—'}, {route.longitude ?? '—'}
                     </td>
